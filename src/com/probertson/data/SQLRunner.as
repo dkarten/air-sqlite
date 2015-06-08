@@ -26,7 +26,8 @@ package com.probertson.data
 {
 	import com.probertson.data.sqlRunnerClasses.ConnectionPool;
 	import com.probertson.data.sqlRunnerClasses.PendingBatch;
-	import com.probertson.data.sqlRunnerClasses.PendingStatement;
+import com.probertson.data.sqlRunnerClasses.PendingSchema;
+import com.probertson.data.sqlRunnerClasses.PendingStatement;
 	import com.probertson.data.sqlRunnerClasses.StatementCache;
 	
 	import flash.data.SQLStatement;
@@ -296,7 +297,12 @@ package com.probertson.data
 			var pendingBatch:PendingBatch = new PendingBatch(statements, parameters, resultHandler, errorHandler, progressHandler);
 			_connectionPool.addBlockingBatch(pendingBatch);
 		}
-		
+
+        public function loadTableSchema(type:Class=null, name:String=null,database:String="main",includeColumnSchema:Boolean=true, resultHandler:Function=null, errorHandler:Function=null):void {
+            var schema:PendingSchema = new PendingSchema(type, name, database, includeColumnSchema, resultHandler, errorHandler);
+            _connectionPool.addPendingSchema(schema);
+        }
+
 		
 		/**
 		 * Waits until all pending statements execute, then closes all open connections to 

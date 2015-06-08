@@ -65,6 +65,7 @@ package com.probertson.data.sqlRunnerClasses
 		private var _totalConnections:int = 0;
 		private var _numConnectionsBeingOpened:int = 0;
 		private var _pending:Vector.<PendingStatement>;
+        private var _pendingSchema:Vector.<PendingSchema>;
 		// Batch/blocking (write/modify) connection
 		private var _blocked:Boolean = false;
 		private var _blockingPending:Vector.<PendingBatch>;
@@ -152,6 +153,14 @@ package com.probertson.data.sqlRunnerClasses
 				checkPending();
 			}
 		}
+
+        public function addPendingSchema(schema:PendingSchema):void {
+            if (!_blocked) {
+                _pendingSchema.push(schema);
+            }
+
+
+        }
 		
 		
 		public function close(handler:Function, errorHandler:Function):void
@@ -195,6 +204,12 @@ package com.probertson.data.sqlRunnerClasses
 		
 		private function checkPending():void
 		{
+			//schema statements
+            if (_pendingSchema.length) {
+                checkPendingSchema();
+                return;
+            }
+
 			// standard (read-only) statements
 			while (_pending.length > 0)
 			{
@@ -273,6 +288,31 @@ package com.probertson.data.sqlRunnerClasses
 				closeAll();
 			}
 		}
+
+        private function checkPendingSchema():void {
+            while (_pendingSchema.length > 0)
+            {
+                var schema_conn:SQLConnection;
+                if (_available.length > 0)
+                {
+                    //if there is an available connection, use it
+                    var schema:PendingSchema = _pendingSchema.shift();
+                    schema_conn = _available.shift();
+                    _inUse[schema_conn] = true;
+                    schema.executeWithConnection(this, schema_conn);
+                } else if (_totalConnections < _maxSize && _pendingSchema.length > _numConnectionsBeingOpened)
+                {
+                    //we can create a new one and close it when we're done
+                    schema_conn = new SQLConnection();
+                    schema_conn.addEventListener(SQLEvent.OPEN, conn_open);
+                    schema_conn.addEventListener(SQLErrorEvent.ERROR, conn_openError);
+                    schema_conn.openAsync(_dbFile, SQLMode.READ, null, false, 1024, _encryptionKey);
+                } else
+                {
+                    return;
+                }
+            }
+        }
 		
 		
 		private function conn_open(event:SQLEvent):void
@@ -292,6 +332,23 @@ package com.probertson.data.sqlRunnerClasses
 				checkPending();
 			}
 		}
+
+        private function schema_conn_open(event:SQLEvent):void {
+            var conn:SQLConnection = event.target as SQLConnection;
+            conn.removeEventListener(SQLEvent.OPEN, conn_open);
+            conn.removeEventListener(SQLErrorEvent.ERROR, conn_openError);
+
+            if (conn != _blockingConnection)
+            {
+                _numConnectionsBeingOpened--;
+                returnConnection(conn);
+            }
+            else
+            {
+                _blocked = false;
+                checkPendingSchema();
+            }
+        }
 		
 		
 		private function conn_openError(event:SQLErrorEvent):void
