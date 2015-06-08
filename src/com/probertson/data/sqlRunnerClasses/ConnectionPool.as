@@ -158,9 +158,8 @@ package com.probertson.data.sqlRunnerClasses
         public function addPendingSchema(schema:PendingSchema):void {
             if (!_blocked) {
                 _pendingSchema.push(schema);
+                checkPending();
             }
-
-
         }
 		
 		
@@ -304,6 +303,8 @@ package com.probertson.data.sqlRunnerClasses
                 } else if (_totalConnections < _maxSize && _pendingSchema.length > _numConnectionsBeingOpened)
                 {
                     //we can create a new one and close it when we're done
+                    _numConnectionsBeingOpened++;
+                    _totalConnections++;
                     schema_conn = new SQLConnection();
                     schema_conn.addEventListener(SQLEvent.OPEN, conn_open);
                     schema_conn.addEventListener(SQLErrorEvent.ERROR, conn_openError);
