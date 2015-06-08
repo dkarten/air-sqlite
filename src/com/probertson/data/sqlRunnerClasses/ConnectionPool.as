@@ -51,6 +51,7 @@ package com.probertson.data.sqlRunnerClasses
 			_available = new Vector.<SQLConnection>();
 			_inUse = new Dictionary();
 			_pending = new Vector.<PendingStatement>();
+            _pendingSchema = new Vector.<PendingSchema>();
 		}
 		
 		
