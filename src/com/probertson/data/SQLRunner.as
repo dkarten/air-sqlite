@@ -298,7 +298,7 @@ import com.probertson.data.sqlRunnerClasses.PendingStatement;
 			_connectionPool.addBlockingBatch(pendingBatch);
 		}
 
-        public function loadTableSchema(type:Class=null, name:String=null,database:String="main",includeColumnSchema:Boolean=true, resultHandler:Function=null, errorHandler:Function=null):void {
+        public function loadSchema(type:Class=null, name:String=null,database:String="main",includeColumnSchema:Boolean=true, resultHandler:Function=null, errorHandler:Function=null):void {
             var schema:PendingSchema = new PendingSchema(type, name, database, includeColumnSchema, resultHandler, errorHandler);
             _connectionPool.addPendingSchema(schema);
         }

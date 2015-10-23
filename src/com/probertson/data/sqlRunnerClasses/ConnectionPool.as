@@ -334,24 +334,6 @@ package com.probertson.data.sqlRunnerClasses
 				checkPending();
 			}
 		}
-
-        private function schema_conn_open(event:SQLEvent):void {
-            var conn:SQLConnection = event.target as SQLConnection;
-            conn.removeEventListener(SQLEvent.OPEN, conn_open);
-            conn.removeEventListener(SQLErrorEvent.ERROR, conn_openError);
-
-            if (conn != _blockingConnection)
-            {
-                _numConnectionsBeingOpened--;
-                returnConnection(conn);
-            }
-            else
-            {
-                _blocked = false;
-                checkPendingSchema();
-            }
-        }
-		
 		
 		private function conn_openError(event:SQLErrorEvent):void
 		{
